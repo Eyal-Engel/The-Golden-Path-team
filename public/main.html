@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+      integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm"
+      crossorigin="anonymous"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      body {
+        color: black;
+        background-size: 100% 100%;
+        background-image: url("./Images/background.jpg");
+        background-repeat: no-repeat;
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 0;
+        margin: 0;
+      }
+      @import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,300,400,600");
+
+      .container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ::placeholder {
+        color: white;
+      }
+
+      .appBody {
+        display: flex;
+        flex-direction: row;
+        direction: rtl;
+        height: 90%;
+        width: 100%;
+      }
+
+      .section1 {
+        height: 10%;
+        width: 100%;
+        padding-top: 1vh;
+      }
+
+      .section1 .headline {
+        display: flex;
+        line-height: 10vh;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 4vw;
+        color: rgb(152, 150, 70);
+        font-family: "David";
+        font-weight: bold;
+        padding-top: 1vh;
+      }
+
+      .section2 {
+        width: 50vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .section2 .inputData {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 20vh;
+      }
+
+      .section2 .inputData .headerLabel {
+        display: flex;
+        justify-content: right;
+        font-size: 1.5vw;
+        font-family: "David";
+        font-weight: bold;
+        color: black;
+        padding-right: 0.8vw;
+        margin-bottom: 0.2vw;
+      }
+
+      .section2 .inputData .inputBox {
+        width: 97%;
+        height: 2vw;
+        color: black;
+        background-color: white(2, 110, 172);
+        outline: none;
+        border-radius: 10vw;
+        border: 3px solid blue;
+        margin-bottom: 2vw;
+        font-size: 1.1vw;
+        padding-inline-start: 1vw;
+      }
+
+      .section2 .inputData .calcualteBtn {
+        display: flex;
+        flex-direction: column;
+        width: 5vw;
+        height: 2vw;
+        border-radius: 2vw;
+        color: white;
+        background-color: blue;
+        font-size: 1.5vw;
+        text-align: center;
+      }
+
+      .section2 .calcualteBtn:hover {
+        cursor: pointer;
+      }
+
+      .section3 {
+        width: auto;
+        width: 50vw;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding-top: 4vh;
+      }
+
+      .graph {
+        height: 50%;
+        width: 100%;
+      }
+
+      .notification {
+        margin-top: 5vw;
+        font-size: 1vw;
+        color: rgb(192, 2, 2);
+      }
+
+      .result {
+        height: 50%;
+        width: 100%;
+        font-size: 2vw;
+        color: black;
+        color: rgb(15, 2, 128);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="section1">
+        <div class="headline">צוות נתיב הזהב</div>
+      </div>
+      <div class="appBody">
+        <div class="section2">
+          <div class="inputData">
+            <div class="headerLabel">מהירות התחלתית</div>
+            <input type="number" id="speed" class="inputBox" />
+            <div class="headerLabel">זווית התחלתית אל מול האופק</div>
+            <input type="number" id="angle" class="inputBox" />
+            <div class="headerLabel">גובה התחלתי מעל פני הקרקע</div>
+            <input type="number" id="height" class="inputBox" />
+            <div class="calcualteBtn" id="calcualteBtn">חשב</div>
+          </div>
+        </div>
+        <div class="section3">
+          <div class="graph">
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <div
+              class="chart-container"
+              style="
+                position: relative;
+                height: 20vh;
+                width: 35.55vw;
+                padding-top: 5vh;
+              "
+            >
+              <canvas id="myChart" class="myChart"></canvas>
+            </div>
+          </div>
+          <div class="notification" id="notification"></div>
+          <div class="result">
+            <div>
+              <label>מיקום הזבובון בעת הפגיעה בקרקע:</label>
+              <label id="flyDistance"></label>
+            </div>
+            <div>
+              <label>מהירות הפגיעה בקרקע:</label>
+              <label id="flySpeed"></label>
+            </div>
+            <div>
+              <label>זווית הפגיעה בקרקע:</label>
+              <label id="flyAngle"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      let myChart = null;
+
+      const updateChart = (positions) => {
+        const labels = positions[0];
+
+        const data = {
+          labels: labels,
+          datasets: [
+            {
+              label: "מעוף הזבובון",
+              backgroundColor: "rgb(15, 2, 128)",
+              borderColor: "rgb(15, 2, 128)",
+              data: positions[1],
+            },
+          ],
+        };
+
+        const config = {
+          type: "line",
+          data: data,
+          options: {},
+        };
+        if (myChart) myChart.destroy();
+        myChart = new Chart(document.getElementById("myChart"), config);
+      };
+
+      updateChart([[], []]);
+
+      const updateValues = (values) => {
+        const flyDistance = document.getElementById("flyDistance");
+        const flySpeed = document.getElementById("flySpeed");
+        const flyAngle = document.getElementById("flyAngle");
+
+        flyDistance.innerText = values.distance.toFixed(2);
+        flySpeed.innerText = values.speed.toFixed(2);
+        flyAngle.innerText = values.angle.toFixed(2);
+      };
+
+      const calcualteBtn = document.getElementById("calcualteBtn");
+      const notificationDiv = document.getElementById("notification");
+
+      calcualteBtn.addEventListener("click", async function () {
+        const V0 = document.getElementById("speed").value;
+        const initialAngle = document.getElementById("angle").value;
+        const h0 = document.getElementById("height").value;
+
+        try {
+          const ans = await axios.get(
+            "https://192.168.1.124:3030/getBalisticThrow",
+            {
+              params: {
+                V0,
+                initialAngle,
+                h0,
+              },
+            }
+          );
+
+          if (initialAngle == 0 && h0 > 0 && V0 > 0)
+            notificationDiv.innerText =
+              "הערה: תנועה זו היא גם זריקה בליסטית וגם זריקה אופקית";
+          else notificationDiv.innerText = "";
+
+          updateChart(ans.data?.positions);
+          updateValues(ans.data?.values);
+        } catch (err) {
+          console.log(err);
+
+          let error = err.response.data;
+          var stringAns = "";
+
+          if (error == "Invalid V0") {
+            stringAns =
+              "מהירות התחלתית אינה תקינה - מהירות חייבת להיות 0 ומעלה";
+          } else if (error == "Invalid initialAngle") {
+            stringAns =
+              "זווית התחלתית אל מול האופק אינה תקינה - הזווית חייבת להיות בין 0 ל-90";
+          } else if (error == "Invalid h0") {
+            stringAns = "גובה התחלתי חייב להיות מעל פני הקרקע - גדול מ-0";
+          } else if (error == "No Movement") {
+            stringAns = "הזבובון אינו יבצע תנועה כלל";
+          } else if (error == "Free Fall Movement") {
+            stringAns = "תנועה זו הינה נפילה חופשית ואינה תנועה בליסטית";
+          }
+
+          Swal.fire({
+            icon: "warning",
+            title: "",
+            text: stringAns,
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
